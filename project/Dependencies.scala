@@ -4,7 +4,7 @@ import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 
 object Dependencies {
   // Here are the versions used for the core project
-  val scalaVersion = "2.10.4"
+  val scala210Version = "2.10.4"
   val scala211Version = "2.11.5"
 
   val picklingVersion = "0.10.0-M3"

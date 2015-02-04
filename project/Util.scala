@@ -29,7 +29,6 @@ object Util {
       javacOptions in (Compile, doc) := Seq("-source", "1.6"),
       // Scaladoc is slow as molasses.
       Keys.publishArtifact in (Compile, packageDoc) := false,
-      scalaVersion := Dependencies.scalaVersion,
       // scalaBinaryVersion <<= scalaVersion apply { sv =>
       //   CrossVersion.binaryScalaVersion(sv)
       // },

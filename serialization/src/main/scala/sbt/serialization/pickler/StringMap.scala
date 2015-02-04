@@ -6,9 +6,9 @@ import scala.pickling.{ FastTypeTag, PBuilder, PReader, PicklingException }
 
 trait StringMapPicklers {
   // FIXME this could theoretically work for M<:Map[String,A] and use a CanBuildFrom for M?
-  implicit def stringMapPickler[A](implicit valuePickler: SPickler[A], valueUnpickler: Unpickler[A], valueTag: FastTypeTag[A],
+  implicit def stringMapPickler[A](implicit valuePickler: Pickler[A], valueUnpickler: Unpickler[A], valueTag: FastTypeTag[A],
     mapTag: FastTypeTag[Map[String, A]],
-    keysPickler: SPickler[List[String]], keysUnpickler: Unpickler[List[String]]): SPickler[Map[String, A]] with Unpickler[Map[String, A]] = new SPickler[Map[String, A]] with Unpickler[Map[String, A]] {
+    keysPickler: Pickler[List[String]], keysUnpickler: Unpickler[List[String]]): Pickler[Map[String, A]] with Unpickler[Map[String, A]] = new Pickler[Map[String, A]] with Unpickler[Map[String, A]] {
     override val tag = mapTag
 
     def pickle(m: Map[String, A], builder: PBuilder): Unit = {

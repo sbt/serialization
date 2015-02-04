@@ -8,9 +8,9 @@ trait SerializationFunctions {
   import scala.language.experimental.macros
 
   // non-implicit aliases of pickling's gen macros
-  def genPickler[T]: SPickler[T] = macro scala.pickling.Compat.PicklerMacros_impl[T]
+  def genPickler[T]: Pickler[T] = macro scala.pickling.Compat.PicklerMacros_impl[T]
   def genUnpickler[T]: Unpickler[T] with scala.pickling.Generated = macro scala.pickling.Compat.UnpicklerMacros_impl[T]
 
-  def toJsonString[A: SPickler](a: A): String = SerializedValue(a).toJsonString
+  def toJsonString[A: Pickler](a: A): String = SerializedValue(a).toJsonString
   def fromJsonString[A: Unpickler](json: String): Try[A] = SerializedValue.fromJsonString(json).parse[A]
 }

@@ -108,7 +108,7 @@ package json {
 
   // A slow implementation of of a pickle builder
   // This uses a TON of branch statements to ensure the builder is in the correct state for any call
-  // and to programatically enforce constraints of SPickler implementations.
+  // and to programatically enforce constraints of Pickler implementations.
   // We use this just to verify our own picklers.
   private[json] class VerifyingJSONPickleBuilder(format: JSONPickleFormat, buf: Output[String]) extends PBuilder with PickleTools {
     import JSONPickleFormat._

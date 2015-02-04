@@ -7,17 +7,17 @@ import JUnitUtil._
 
 private final case class Apple(foo: Int) extends Fruit
 private object Apple {
-  implicit val pickler = SPickler.generate[Apple]
+  implicit val pickler = Pickler.generate[Apple]
   implicit val unpickler = Unpickler.generate[Apple]
 }
 private final case class Orange(bar: String) extends Fruit
 private object Orange {
-  implicit val pickler = SPickler.generate[Orange]
+  implicit val pickler = Pickler.generate[Orange]
   implicit val unpickler = Unpickler.generate[Orange]
 }
 private sealed trait Fruit
 private object Fruit {
-  implicit val pickler = SPickler.generate[Fruit]
+  implicit val pickler = Pickler.generate[Fruit]
   implicit val unpickler = Unpickler.generate[Fruit]
 }
 

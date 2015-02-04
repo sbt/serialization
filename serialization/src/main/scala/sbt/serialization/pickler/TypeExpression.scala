@@ -11,6 +11,6 @@ object TypeExpressionPicklers {
 }
 /** Provides a layer of pickler cake for type expressoins. */
 trait TypeExpressionPicklers extends JavaExtraPicklers {
-  implicit val typeExpressionPickler: SPickler[TypeExpression] with Unpickler[TypeExpression] =
+  implicit val typeExpressionPickler: Pickler[TypeExpression] with Unpickler[TypeExpression] =
     canToStringPickler[TypeExpression](FastTypeTag[TypeExpression], TypeExpressionPicklers.typeExpressionCanToString)
 }

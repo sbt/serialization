@@ -27,7 +27,7 @@ object JavaExtraPicklers {
  */
 trait JavaExtraPicklers extends PrimitivePicklers {
   // TODO - Maybe this shouldn't be implicitly available.
-  implicit def canToStringPickler[A: FastTypeTag](implicit canToString: CanToString[A]): SPickler[A] with Unpickler[A] = new SPickler[A] with Unpickler[A] {
+  implicit def canToStringPickler[A: FastTypeTag](implicit canToString: CanToString[A]): Pickler[A] with Unpickler[A] = new Pickler[A] with Unpickler[A] {
     val tag = implicitly[FastTypeTag[A]]
     def pickle(a: A, builder: PBuilder): Unit = {
       builder.pushHints()
@@ -54,8 +54,8 @@ trait JavaExtraPicklers extends PrimitivePicklers {
     }
   }
 
-  implicit val filePickler: SPickler[File] with Unpickler[File] =
+  implicit val filePickler: Pickler[File] with Unpickler[File] =
     canToStringPickler[File](FastTypeTag[File], JavaExtraPicklers.fileCanToString)
-  implicit val uriPickler: SPickler[URI] with Unpickler[URI] =
+  implicit val uriPickler: Pickler[URI] with Unpickler[URI] =
     canToStringPickler[URI](FastTypeTag[URI], JavaExtraPicklers.uriCanToString)
 }

@@ -7,11 +7,11 @@ import scala.pickling.PicklingException
 
 trait ThrowablePicklers extends PrimitivePicklers with OptionPicklers with VectorPicklers with RefPicklers {
 
-  private implicit object stackTracePickler extends SPicklerUnpickler[StackTraceElement] {
+  private implicit object stackTracePickler extends Pickler[StackTraceElement] with Unpickler[StackTraceElement] {
     override val tag: FastTypeTag[StackTraceElement] = implicitly[FastTypeTag[StackTraceElement]]
     private val intTag = implicitly[FastTypeTag[Int]]
     private val stringOptTag = implicitly[FastTypeTag[Option[String]]]
-    private val stringOptPickler = implicitly[SPickler[Option[String]]]
+    private val stringOptPickler = implicitly[Pickler[Option[String]]]
     private val stringOptUnpickler = implicitly[Unpickler[Option[String]]]
 
     override def pickle(a: StackTraceElement, builder: PBuilder): Unit = {
@@ -44,12 +44,12 @@ trait ThrowablePicklers extends PrimitivePicklers with OptionPicklers with Vecto
   }
 
   // TODO why isn't this in LowPriority / what goes in Low and what goes here?
-  implicit object throwablePicklerUnpickler extends SPickler[Throwable] with Unpickler[Throwable] {
+  implicit object throwablePicklerUnpickler extends Pickler[Throwable] with Unpickler[Throwable] {
     val tag: FastTypeTag[Throwable] = implicitly[FastTypeTag[Throwable]]
     private val stringTag = implicitly[FastTypeTag[String]]
     private val stringOptTag = implicitly[FastTypeTag[Option[String]]]
     private val throwableOptTag = implicitly[FastTypeTag[Option[Throwable]]]
-    private val stringOptPickler = implicitly[SPickler[Option[String]]]
+    private val stringOptPickler = implicitly[Pickler[Option[String]]]
     private val stringOptUnpickler = implicitly[Unpickler[Option[String]]]
     private val throwableOptPicklerUnpickler = optionPickler[Throwable](tag, this, this, throwableOptTag)
     private val vsteTag = implicitly[FastTypeTag[Vector[StackTraceElement]]]

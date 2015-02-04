@@ -141,7 +141,7 @@ class ArrayPicklerTest {
 
   def trimLine(s: String): String =
     (s.lines map { _.trim }).mkString("\n")
-  def pointed1[F[_], A: ClassManifest](implicit m: Pointed[F], ae: ArrayExample[A], ev0: SPickler[F[A]], ev1: FastTypeTag[F[A]]) =
+  def pointed1[F[_], A: ClassManifest](implicit m: Pointed[F], ae: ArrayExample[A], ev0: Pickler[F[A]], ev1: FastTypeTag[F[A]]) =
     assertEquals(s"With type $ev1", ae.arrayJson, (trimLine(SerializedValue(m.pointed(ae.one)).toJsonString)))
   def pointed2[F[_], A: ClassManifest](implicit m: Pointed[F], ae: ArrayExample[A], ev0: Unpickler[F[A]], ev1: FastTypeTag[F[A]]) =
     SerializedValue.fromJsonString(ae.arrayJson).parse[F[A]].get must_== m.pointed(ae.one)

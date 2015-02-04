@@ -7,12 +7,11 @@ package sbt
  * SerializedValue type for what formats this library supports serializing into.
  */
 package object serialization extends SerializationFunctions with CustomPicklers with SbtSerializers {
-  type SPickler[A] = scala.pickling.SPickler[A]
-  val SPickler = scala.pickling.SPickler
+  type Pickler[A] = scala.pickling.Pickler[A]
+  val Pickler = scala.pickling.Pickler
   type Unpickler[A] = scala.pickling.Unpickler[A]
   val Unpickler = scala.pickling.Unpickler
-  type SPicklerUnpickler[A] = scala.pickling.SPicklerUnpickler[A]
-  val SPicklerUnpickler = scala.pickling.SPicklerUnpickler
+  val PicklerUnpickler = scala.pickling.PicklerUnpickler
   // These are exposed for custom implementations of picklers.
   type FastTypeTag[A] = scala.pickling.FastTypeTag[A]
   type PReader = scala.pickling.PReader

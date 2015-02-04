@@ -57,7 +57,7 @@ sealed trait SerializedValue {
 }
 
 object SerializedValue {
-  def apply[V](value: V)(implicit pickler: SPickler[V]): SerializedValue =
+  def apply[V](value: V)(implicit pickler: Pickler[V]): SerializedValue =
     LazyValue[V](value, pickler)
 
   /** Reconstitutes a SerializedValue from a json string. */
@@ -71,7 +71,7 @@ object SerializedValue {
   // NOTE: this pickler ONLY works with our JSONPickleFormat because
   // it assumes JValue is a "primitive" known to the format.
   // we can adjust this if we add a binary format.
-  private[sbt] object pickler extends SPickler[SerializedValue] with Unpickler[SerializedValue] {
+  private[sbt] object pickler extends Pickler[SerializedValue] with Unpickler[SerializedValue] {
     val cheaterTag = implicitly[FastTypeTag[JValue]]
     // TODO - This is super hacky mechanism to avoid issues w/ pinned types.
     override val tag = cheaterTag.asInstanceOf[FastTypeTag[SerializedValue]]
@@ -120,7 +120,7 @@ private final case class JsonValue(pickledValue: JSONPickle) extends SerializedV
  *  picked a format yet. Allows us to defer format selection, or
  *  for in-process uses we can even try to skip serialization.
  */
-private final case class LazyValue[V](value: V, pickler: SPickler[V]) extends SerializedValue {
+private final case class LazyValue[V](value: V, pickler: Pickler[V]) extends SerializedValue {
   // we use this to optimize a common case
   private def unpicklerMatchesExactly[T](unpickler: Unpickler[T]): Boolean = {
     // We compare tag.key because FastTypeTag.equals uses Mirror

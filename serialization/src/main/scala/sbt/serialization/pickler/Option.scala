@@ -6,8 +6,8 @@ import scala.pickling.{ FastTypeTag, PBuilder, PReader, PicklingException }
 import scala.pickling.pickler.PrimitivePicklers
 
 trait OptionPicklers extends PrimitivePicklers with RichTypes {
-  implicit def optionPickler[A: FastTypeTag](implicit elemPickler: SPickler[A], elemUnpickler: Unpickler[A], collTag: FastTypeTag[Option[A]]): SPickler[Option[A]] with Unpickler[Option[A]] =
-    new SPickler[Option[A]] with Unpickler[Option[A]] {
+  implicit def optionPickler[A: FastTypeTag](implicit elemPickler: Pickler[A], elemUnpickler: Unpickler[A], collTag: FastTypeTag[Option[A]]): Pickler[Option[A]] with Unpickler[Option[A]] =
+    new Pickler[Option[A]] with Unpickler[Option[A]] {
       private implicit val elemTag = implicitly[FastTypeTag[A]]
       val tag = implicitly[FastTypeTag[Option[A]]]
       private val isPrimitive = elemTag.tpe.isEffectivelyPrimitive

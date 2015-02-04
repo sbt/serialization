@@ -6,7 +6,7 @@ package sbt
  * This package supports creating Pickler/Unpickler functions which can serialize arbitrary types.  See the
  * SerializedValue type for what formats this library supports serializing into.
  */
-package object serialization extends SerializationFunctions with CustomPicklers with SbtSerializers {
+package object serialization extends SerializationFunctions with CustomPicklers {
   type Pickler[A] = scala.pickling.Pickler[A]
   val Pickler = scala.pickling.Pickler
   type Unpickler[A] = scala.pickling.Unpickler[A]

@@ -3,8 +3,8 @@ import com.typesafe.sbt.SbtGit._
 
 lazy val commonSettings = Util.settings ++ versionWithGit ++ Seq(
   organization := "org.scala-sbt",
-  git.baseVersion := "0.1.0-M1",
-  isSnapshot := false,
+  git.baseVersion := "0.1.0",
+  isSnapshot := true,
   version := {
     val old = version.value
     if (isSnapshot.value) old

@@ -36,15 +36,15 @@ private[serialization] object JsonMethods extends org.json4s.JsonMethods[JValue]
     def trimObj(xs: List[JField]) = xs.filter(_._2 != JNothing)
     def append(d: JValue): Unit = {
       d match {
-        case null => buf.append("null")
-        case JBool(true) => buf.append("true")
-        case JBool(false) => buf.append("false")
-        case JDouble(n) => buf.append(n.toString)
-        case JDecimal(n) => buf.append(n.toString)
-        case JInt(n) => buf.append(n.toString)
-        case JNull => buf.append("null")
+        case null          => buf.append("null")
+        case JBool(true)   => buf.append("true")
+        case JBool(false)  => buf.append("false")
+        case JDouble(n)    => buf.append(n.toString)
+        case JDecimal(n)   => buf.append(n.toString)
+        case JInt(n)       => buf.append(n.toString)
+        case JNull         => buf.append("null")
         // TODO - better error message
-        case JNothing => sys.error("can't render 'nothing'")
+        case JNothing      => sys.error("can't render 'nothing'")
         // TODO - does this even make sense?
         case JString(null) => buf.append("null")
         case JString(s) =>
@@ -107,20 +107,20 @@ private[serialization] object JsonMethods extends org.json4s.JsonMethods[JValue]
   }
 
   private final def jvalueSorted(jvalue: JValue): JValue = jvalue match {
-    case null => null
+    case null        => null
     case JObject(el) => JObject(el.sortBy(_._1).map(kv => kv._1 -> jvalueSorted(kv._2)))
-    case JArray(el) => JArray(el.map(jvalueSorted(_)))
-    case other => other
+    case JArray(el)  => JArray(el.map(jvalueSorted(_)))
+    case other       => other
   }
 
   def jvalueEquals(jvalue: JValue, jvalue2: JValue): Boolean =
     (jvalue, jvalue2) match {
       // deal with null
-      case (null, null) => true
-      case (JNull, JNull) => true
-      case (JNull, null) | (null, JNull) => false
+      case (null, null)                                         => true
+      case (JNull, JNull)                                       => true
+      case (JNull, null) | (null, JNull)                        => false
       // optimize by avoiding the jvalueSorted if sizes don't match anyhow
-      case (JArray(el), JArray(el2)) if (el.size != el2.size) => false
+      case (JArray(el), JArray(el2)) if (el.size != el2.size)   => false
       case (JObject(el), JObject(el2)) if (el.size != el2.size) => false
       case (left, right) =>
         // use the order-sensitive json4s implementation after sorting object fields

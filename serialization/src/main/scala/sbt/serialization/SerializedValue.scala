@@ -47,9 +47,9 @@ sealed trait SerializedValue {
 
   final override def equals(other: Any): Boolean =
     other match {
-      case null => false
+      case null                => false
       case sv: SerializedValue => json.JsonMethods.jvalueEquals(toJValue, sv.toJValue)
-      case _ => false
+      case _                   => false
     }
 
   final override def hashCode(): Int =

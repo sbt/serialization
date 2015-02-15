@@ -36,15 +36,15 @@ package json {
       case obj: JObject =>
         (obj \ JSONPickleFormat.TYPE_TAG_FIELD) match {
           case JString(s) => Some(s)
-          case _ => None
+          case _          => None
         }
       case _ => None
     }
 
     override final def equals(other: Any): Boolean = other match {
-      case null => false
+      case null          => false
       case o: JSONPickle => JsonMethods.jvalueEquals(parsedValue, o.parsedValue)
-      case _ => false
+      case _             => false
     }
     override def hashCode = parsedValue.hashCode
   }
@@ -54,7 +54,7 @@ package json {
     def parsedValue: JValue =
       jawn.support.json4s.Parser.parseFromString(value) match {
         case Success(json: JValue) => json
-        case Failure(e) => throw new PicklingException(s"""failed to parse "${value}" as JSON: ${e.getMessage}""")
+        case Failure(e)            => throw new PicklingException(s"""failed to parse "${value}" as JSON: ${e.getMessage}""")
       }
   }
   private[json] class JValuePickle(override val parsedValue: JValue) extends JSONPickle {
@@ -70,7 +70,7 @@ package json {
       in match {
         // this null check is because when we read primitive (I think with no type tag),
         // we get null instead of JNull.
-        case null => new JValuePickle(JNull)
+        case null  => new JValuePickle(JNull)
         case other => new JValuePickle(other)
       }
   }
@@ -344,7 +344,7 @@ package json {
     private def atJValue: Boolean =
       state match {
         case JsValueWithTag(_, tag, _) => (tag startsWith "org.json4s.JsonAST.")
-        case _ => false
+        case _                         => false
       }
 
     override def readPrimitive(): Any = {
@@ -357,10 +357,10 @@ package json {
         else value match {
           case x: JString => x.values
           //case x: JDouble => x.values
-          case x: JBool => x.value
+          case x: JBool   => x.value
           // TODO - We need to understand why the tag doesn't say JsonAST here...
           case x: JObject => x
-          case JNull => null
+          case JNull      => null
           case _ =>
             // TODO - check to see if we need the old primitiveSeqKeys handling
             // to read a primtiive out of a JArray
@@ -419,10 +419,10 @@ package json {
       case CollectionReadingState(value, 0, _) =>
         //System.err.println(s"readLength()")
         value match {
-          case JNothing => 0
-          case JNull => 0 // Hackery for Option handling
+          case JNothing  => 0
+          case JNull     => 0 // Hackery for Option handling
           case x: JArray => x.arr.size
-          case x => 1 // Hackery for Option handling
+          case x         => 1 // Hackery for Option handling
         }
       case x => throw new PicklingException(s"Cannot read length when not in collection reading state.")
     }
@@ -461,55 +461,55 @@ package json {
         case obj: JObject =>
           (obj \ REF_ID_FIELD) match {
             case JDouble(num) => num.toInt
-            case x => unexpectedValue(x, FastTypeTag.Ref)
+            case x            => unexpectedValue(x, FastTypeTag.Ref)
           }
         case x => unexpectedValue(x, FastTypeTag.Ref)
       })),
       FastTypeTag.Int.key -> (datum => datum match {
         case JDouble(num) => num.toInt
-        case x => unexpectedValue(x, FastTypeTag.Int)
+        case x            => unexpectedValue(x, FastTypeTag.Int)
       }),
       FastTypeTag.Short.key -> (datum => datum match {
         case JDouble(num) => num.toShort
-        case x => unexpectedValue(x, FastTypeTag.Short)
+        case x            => unexpectedValue(x, FastTypeTag.Short)
       }),
       FastTypeTag.Double.key -> (datum => datum match {
         case JDouble(num) => num
-        case x => unexpectedValue(x, FastTypeTag.Double)
+        case x            => unexpectedValue(x, FastTypeTag.Double)
       }),
       FastTypeTag.Float.key -> (datum => datum match {
         case JDouble(num) => num.toFloat
-        case x => unexpectedValue(x, FastTypeTag.Float)
+        case x            => unexpectedValue(x, FastTypeTag.Float)
       }),
       FastTypeTag.Long.key -> (datum => datum match {
         case JDouble(num) => num.toLong
-        case JString(s) => s.toLong
-        case x => unexpectedValue(x, FastTypeTag.Long)
+        case JString(s)   => s.toLong
+        case x            => unexpectedValue(x, FastTypeTag.Long)
       }),
       FastTypeTag.Byte.key -> (datum => datum match {
         case JDouble(num) => num.toByte
-        case x => unexpectedValue(x, FastTypeTag.Byte)
+        case x            => unexpectedValue(x, FastTypeTag.Byte)
       }),
       FastTypeTag.Boolean.key -> (datum => datum match {
         case JBool(b) => b
-        case x => unexpectedValue(x, FastTypeTag.Boolean)
+        case x        => unexpectedValue(x, FastTypeTag.Boolean)
       }),
       FastTypeTag.Char.key -> (datum => datum match {
         case JString(s) => s.head
-        case x => unexpectedValue(x, FastTypeTag.Char)
+        case x          => unexpectedValue(x, FastTypeTag.Char)
       }),
       FastTypeTag.String.key -> (datum => datum match {
         // TODO - where is this coming from... appears to be `Option[String]`, when option is `None`
         // More importantly, why is Jawn returning null instead of JNull?
-        case null => null
+        case null       => null
         case JString(s) => s
-        case x => unexpectedValue(x, FastTypeTag.String)
+        case x          => unexpectedValue(x, FastTypeTag.String)
       }),
       FastTypeTag.ArrayByte.key -> (datum => (datum match {
         case JArray(arr) =>
           arr map {
             case JDouble(num) => num.toByte
-            case x => unexpectedValue(x, FastTypeTag.Byte)
+            case x            => unexpectedValue(x, FastTypeTag.Byte)
           }
         case x => unexpectedValue(x, FastTypeTag.ArrayByte)
       }).toArray),
@@ -517,7 +517,7 @@ package json {
         case JArray(arr) =>
           arr map {
             case JDouble(num) => num.toShort
-            case x => unexpectedValue(x, FastTypeTag.Short)
+            case x            => unexpectedValue(x, FastTypeTag.Short)
           }
         case x => unexpectedValue(x, FastTypeTag.ArrayShort)
       }).toArray),
@@ -525,7 +525,7 @@ package json {
         case JArray(arr) =>
           arr map {
             case JString(s) => s.head
-            case x: JValue => unexpectedValue(x, FastTypeTag.Char)
+            case x: JValue  => unexpectedValue(x, FastTypeTag.Char)
           }
         case x => unexpectedValue(x, FastTypeTag.ArrayChar)
       }).toArray),
@@ -534,7 +534,7 @@ package json {
           case JArray(arr) =>
             arr map {
               case JDouble(num) => num.toInt
-              case x => unexpectedValue(x, FastTypeTag.Int)
+              case x            => unexpectedValue(x, FastTypeTag.Int)
             }
           case x => unexpectedValue(x, FastTypeTag.ArrayInt)
         }).toArray
@@ -543,8 +543,8 @@ package json {
         case JArray(arr) =>
           arr map {
             case JDouble(num) => num.toLong
-            case JString(s) => s.toLong
-            case x => unexpectedValue(x, FastTypeTag.Long)
+            case JString(s)   => s.toLong
+            case x            => unexpectedValue(x, FastTypeTag.Long)
           }
         case x => unexpectedValue(x, FastTypeTag.ArrayLong)
       }).toArray),
@@ -552,7 +552,7 @@ package json {
         case JArray(arr) =>
           arr map {
             case JBool(b) => b
-            case x => unexpectedValue(x, FastTypeTag.Boolean)
+            case x        => unexpectedValue(x, FastTypeTag.Boolean)
           }
         case x => unexpectedValue(x, FastTypeTag.ArrayBoolean)
       }).toArray),
@@ -560,7 +560,7 @@ package json {
         case JArray(arr) =>
           arr map {
             case JDouble(num) => num.toFloat
-            case x => unexpectedValue(x, FastTypeTag.Float)
+            case x            => unexpectedValue(x, FastTypeTag.Float)
           }
         case x => unexpectedValue(x, FastTypeTag.ArrayFloat)
       }).toArray),
@@ -568,7 +568,7 @@ package json {
         case JArray(arr) =>
           arr map {
             case JDouble(num) => num
-            case x => unexpectedValue(x, FastTypeTag.Double)
+            case x            => unexpectedValue(x, FastTypeTag.Double)
           }
         case x => unexpectedValue(x, FastTypeTag.ArrayDouble)
       }).toArray))
@@ -586,13 +586,13 @@ package json {
     private def readTypeTagKey(obj: JObject, hints: Hints): String = {
       (obj \ TYPE_TAG_FIELD) match {
         case JString(s) => s
-        case found => hints.tag.key
+        case found      => hints.tag.key
       }
     }
     /** Helper to read (or return elided) type tag for the given entry. */
     private def currentTag(current: JValue, hints: Hints): String = {
       current match {
-        case JNull => FastTypeTag.Null.key
+        case JNull    => FastTypeTag.Null.key
         case JNothing => FastTypeTag.Nothing.key
         case obj: JObject =>
           (obj \ REF_ID_FIELD) match {

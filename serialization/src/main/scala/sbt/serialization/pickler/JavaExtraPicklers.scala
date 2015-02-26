@@ -49,7 +49,7 @@ trait JavaExtraPicklers extends PrimitivePicklers {
         result
       } catch {
         case e: PicklingException => throw e
-        case e: Throwable => throw PicklingException(s""""$s" is not valid ${tag}""", Some(e))
+        case e: Throwable         => throw PicklingException(s""""$s" is not valid ${tag}""", Some(e))
       }
     }
   }

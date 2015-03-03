@@ -15,6 +15,7 @@ import sbt.serialization.pickler.{
   ArrayPicklers,
   SeqPicklers,
   StringMapPicklers,
+  Tuple2Picklers,
   JavaExtraPicklers,
   TypeExpressionPicklers,
   SerializationPicklers
@@ -26,6 +27,7 @@ trait CustomPicklers extends PrimitivePicklers
   with ThrowablePicklers
   with JavaExtraPicklers
   with TypeExpressionPicklers
+  with Tuple2Picklers
   with RefPicklers
   with LowPriorityCustomPicklers
   with SerializationPicklers {}

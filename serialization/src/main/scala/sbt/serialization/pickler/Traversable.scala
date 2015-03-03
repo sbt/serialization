@@ -26,6 +26,15 @@ trait SeqPicklers {
     TravPickler[A, Seq[A]]
 }
 
+trait MapPicklers {
+  implicit def mapPickler[A: FastTypeTag, B: FastTypeTag](implicit keyPickler: Pickler[A],
+    keyUnpickler: Unpickler[A],
+    valuePickler: Pickler[B],
+    valueUnpickler: Unpickler[B],
+    collTag: FastTypeTag[Map[A, B]]): Pickler[Map[A, B]] with Unpickler[Map[A, B]] =
+    TravPickler[(A, B), Map[A, B]]
+}
+
 // Custom pickler for Traversable is needed to emit $type hints for each element.
 object TravPickler {
   def apply[A: FastTypeTag, C <% Traversable[_]](implicit elemPickler: Pickler[A], elemUnpickler: Unpickler[A],

@@ -27,11 +27,12 @@ trait SeqPicklers {
 }
 
 trait MapPicklers {
-  implicit def mapPickler[A: FastTypeTag, B: FastTypeTag](implicit keyPickler: Pickler[A],
+  implicit def mapPickler[A: FastTypeTag, B: FastTypeTag, C >: (A, B)](implicit keyPickler: Pickler[A],
     keyUnpickler: Unpickler[A],
     valuePickler: Pickler[B],
     valueUnpickler: Unpickler[B],
-    collTag: FastTypeTag[Map[A, B]]): Pickler[Map[A, B]] with Unpickler[Map[A, B]] =
+    collTag: FastTypeTag[Map[A, B]],
+    cbf: CanBuildFrom[Map[A, C], C, Map[A, B]]): Pickler[Map[A, B]] with Unpickler[Map[A, B]] =
     TravPickler[(A, B), Map[A, B]]
 }
 

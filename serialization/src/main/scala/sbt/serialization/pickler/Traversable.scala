@@ -42,7 +42,7 @@ object TravPickler {
     cbf: CanBuildFrom[C, A, C], collTag: FastTypeTag[C]): Pickler[C] with Unpickler[C] =
     new Pickler[C] with Unpickler[C] with RichTypes {
       private implicit val elemTag = implicitly[FastTypeTag[A]]
-      private val isPrimitive = elemTag.tpe.isEffectivelyPrimitive
+      private val isPrimitive = elemTag.isEffectivelyPrimitive
       val tag = collTag
 
       def pickle(coll: C, builder: PBuilder): Unit = {

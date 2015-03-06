@@ -1,5 +1,6 @@
 package sbt.serialization
 
+import java.io.File
 import org.json4s.{ JString, JValue }
 import org.json4s.JsonAST._
 import scala.pickling.PicklingException
@@ -38,6 +39,7 @@ sealed trait SerializedValue {
   def hasTag[T](implicit unpickler: Unpickler[T]): Boolean
 
   def toJsonString: String
+  def toJsonFile(file: File): Unit
 
   // TODO toBinary if/when we add binary pickling
 
@@ -63,6 +65,9 @@ object SerializedValue {
   /** Reconstitutes a SerializedValue from a json string. */
   def fromJsonString(value: String): SerializedValue =
     JsonValue(JSONPickle(value))
+  /** Reconstitutes a SerializedValue from a json string. */
+  def fromJsonFile(file: File): SerializedValue =
+    JsonValue(JSONPickle.fromFile(file))
 
   // TODO fromBinary if/when we add binary pickling
 
@@ -106,6 +111,9 @@ private final case class JsonValue(pickledValue: JSONPickle) extends SerializedV
     pickledValue.readTypeTag.map(tag => tag == unpickler.tag.key).getOrElse(false)
 
   override def toJsonString: String = pickledValue.value
+  override def toJsonFile(file: File): Unit =
+    Using.fileWriter(file) { _.write(toJsonString) }
+
   // this deliberately doesn't simply toJsonString because it would
   // be broken to use toString to get parseable json (since the SerializedValue
   // may not be a JsonValue)
@@ -145,6 +153,17 @@ private final case class LazyValue[V](value: V, pickler: Pickler[V]) extends Ser
     unpicklerMatchesExactly(unpickler) || toJson.hasTag[T]
 
   override def toJsonString = toJson.toJsonString
+  override def toJsonFile(file: File): Unit =
+    {
+      val output = new UFT8FileOutput(file)
+      try {
+        val builder = json.pickleFormat.createBuilder(output)
+        pickleInto(value, builder)(pickler)
+      } finally {
+        // don't forget to close
+        output.close()
+      }
+    }
 
   override def toJValue = toJson.toJValue
 

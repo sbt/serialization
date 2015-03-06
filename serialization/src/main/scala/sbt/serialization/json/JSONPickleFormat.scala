@@ -1,5 +1,6 @@
 package sbt.serialization
 
+import java.io.File
 import scala.pickling.{
   FastTypeTag,
   Output,
@@ -16,6 +17,7 @@ import org.json4s._
 import scala.util.parsing.json.JSONFormat.quoteString
 import scala.collection.mutable.{ StringBuilder, Stack }
 import scala.util.{ Success, Failure }
+import jawn.support.json4s.{ Parser => JawnParser }
 
 package json {
 
@@ -52,7 +54,7 @@ package json {
     require(value ne null)
 
     def parsedValue: JValue =
-      jawn.support.json4s.Parser.parseFromString(value) match {
+      JawnParser.parseFromString(value) match {
         case Success(json: JValue) => json
         case Failure(e)            => throw new PicklingException(s"""failed to parse "${value}" as JSON: ${e.getMessage}""")
       }
@@ -66,6 +68,13 @@ package json {
   }
   private[serialization] object JSONPickle {
     def apply(in: String): JSONPickle = new RawStringPickle(in)
+
+    def fromFile(file: File): JSONPickle =
+      fromJValue(JawnParser.parseFromFile(file) match {
+        case Success(json: JValue) => json
+        case Failure(e)            => throw new PicklingException(s"""failed to parse "${file}" as JSON: ${e.getMessage}""")
+      })
+
     def fromJValue(in: JValue): JSONPickle =
       in match {
         // this null check is because when we read primitive (I think with no type tag),

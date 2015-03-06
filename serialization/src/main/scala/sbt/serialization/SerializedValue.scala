@@ -97,7 +97,6 @@ object SerializedValue {
 /** A value we have serialized as JSON */
 private final case class JsonValue(pickledValue: JSONPickle) extends SerializedValue {
   require(pickledValue ne null)
-  require(pickledValue.parsedValue ne null)
 
   import sbt.serialization.json.pickleFormat
   override def parse[T](implicit unpicklerForT: Unpickler[T]): Try[T] =

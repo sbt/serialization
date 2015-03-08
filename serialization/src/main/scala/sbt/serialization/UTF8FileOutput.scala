@@ -11,8 +11,7 @@ private[serialization] class UFT8FileOutput(file: File) extends Output[String] {
     }
     new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, false), UFT8FileOutput.utf8))
   }
-  def result(): String =
-    ???
+  def result(): String = throw new UnsupportedOperationException()
 
   def put(obj: String): this.type = {
     writer.write(obj)

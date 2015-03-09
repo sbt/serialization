@@ -4,7 +4,8 @@ package sbt.serialization
 import scala.pickling.pickler.{
   PrimitivePicklers,
   PrimitiveArrayPicklers,
-  RefPicklers
+  RefPicklers,
+  DatePicklers
 }
 
 import sbt.serialization.pickler.{
@@ -23,6 +24,7 @@ import sbt.serialization.pickler.{
 }
 
 trait CustomPicklers extends PrimitivePicklers
+  with DatePicklers
   with PrimitiveArrayPicklers
   with OptionPicklers
   with ThrowablePicklers

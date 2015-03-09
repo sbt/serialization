@@ -32,7 +32,7 @@ trait MapPicklers {
     valuePickler: Pickler[B],
     valueUnpickler: Unpickler[B],
     collTag: FastTypeTag[Map[A, B]],
-    cbf: CanBuildFrom[Map[A, C], C, Map[A, B]]): Pickler[Map[A, B]] with Unpickler[Map[A, B]] =
+    cbf: CanBuildFrom[Map[A, B], C, Map[A, B]]): Pickler[Map[A, B]] with Unpickler[Map[A, B]] =
     TravPickler[(A, B), Map[A, B]]
 }
 

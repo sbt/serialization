@@ -70,6 +70,11 @@ class BasicPicklerTest {
     roundTrip(Some("Foo"): Option[String]) // roundTrip(Some("Foo")) must fail to compile
     roundTrip(Some(true): Option[Boolean]) // roundTrip(Some(true)) must fail to compile
     roundTrip(Some(10): Option[Int]) // roundTrip(Some(10)) must fail to compile
+    roundTrip((10, "Foo"))
+    roundTrip(((10, false), None: Option[String]))
+    roundTrip(Map("a" -> 10, "b" -> 20))
+    roundTrip(Map(10 -> "a", 20 -> "b"))
+    roundTrip(Map.empty[Int, Long])
   }
 
   @Test

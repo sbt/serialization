@@ -26,13 +26,23 @@ trait SeqPicklers {
     TravPickler[A, Seq[A]]
 }
 
+trait MapPicklers {
+  implicit def mapPickler[A: FastTypeTag, B: FastTypeTag, C >: (A, B)](implicit keyPickler: Pickler[A],
+    keyUnpickler: Unpickler[A],
+    valuePickler: Pickler[B],
+    valueUnpickler: Unpickler[B],
+    collTag: FastTypeTag[Map[A, B]],
+    cbf: CanBuildFrom[Map[A, B], C, Map[A, B]]): Pickler[Map[A, B]] with Unpickler[Map[A, B]] =
+    TravPickler[(A, B), Map[A, B]]
+}
+
 // Custom pickler for Traversable is needed to emit $type hints for each element.
 object TravPickler {
   def apply[A: FastTypeTag, C <% Traversable[_]](implicit elemPickler: Pickler[A], elemUnpickler: Unpickler[A],
     cbf: CanBuildFrom[C, A, C], collTag: FastTypeTag[C]): Pickler[C] with Unpickler[C] =
     new Pickler[C] with Unpickler[C] with RichTypes {
       private implicit val elemTag = implicitly[FastTypeTag[A]]
-      private val isPrimitive = elemTag.tpe.isEffectivelyPrimitive
+      private val isPrimitive = elemTag.isEffectivelyPrimitive
       val tag = collTag
 
       def pickle(coll: C, builder: PBuilder): Unit = {

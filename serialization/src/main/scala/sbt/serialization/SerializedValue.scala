@@ -156,12 +156,19 @@ private final case class LazyValue[V](value: V, pickler: Pickler[V]) extends Ser
   override def toJsonFile(file: File): Unit =
     {
       val output = new UFT8FileOutput(file)
+      var success = false
       try {
         val builder = json.pickleFormat.createBuilder(output)
         pickleInto(value, builder)(pickler)
+        success = true
       } finally {
         // don't forget to close
         output.close()
+        // UTF8FileOutput truncates the file if it exists, so there's no reason why we wouldn't delete it in case an error occured
+        // Otherwise we end up with partially serialized data that will break when trying to deserialize it
+        if (!success) {
+          file.delete()
+        }
       }
     }
 

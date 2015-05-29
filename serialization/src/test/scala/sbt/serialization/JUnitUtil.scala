@@ -28,7 +28,7 @@ object JUnitUtil {
     val parsed = fromJsonString[A](json).get
     (a, parsed) match {
       case (a: Throwable, parsed: Throwable) => e(a, parsed)
-      case _ => f(a, parsed)
+      case _                                 => f(a, parsed)
     }
   }
   implicit class AnyOp[A](a: A) {

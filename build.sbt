@@ -22,6 +22,7 @@ lazy val root = (project in file(".")).
     inThisBuild(Seq(
       organization := "org.scala-sbt",
       homepage := Some(url("https://github.com/sbt/serialization")),
+      description := "serialization facility for sbt",
       licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
       scmInfo := Some(ScmInfo(url("https://github.com/sbt/serialization"), "git@github.com:sbt/serialization.git")),
       developers := List(

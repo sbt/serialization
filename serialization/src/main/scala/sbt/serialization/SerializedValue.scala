@@ -1,7 +1,6 @@
 package sbt.serialization
 
 import java.io.File
-import org.json4s.{ JString, JValue }
 import org.json4s.JsonAST._
 import scala.pickling.PicklingException
 import scala.util.control.NonFatal

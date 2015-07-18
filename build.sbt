@@ -2,7 +2,7 @@ import Dependencies._
 import com.typesafe.sbt.SbtGit._
 
 lazy val commonSettings = Seq(
-  git.baseVersion := "0.1.2",
+  git.baseVersion := "0.1.3",
   scalaVersion := scala210Version,
   crossScalaVersions := Seq(scala210Version, scala211Version),
   libraryDependencies ++= Seq(junitInterface % Test, scalaCheck % Test),

@@ -13,7 +13,7 @@ import scala.pickling.{
 }
 import scala.pickling.internal.lookupUnpicklee
 // FIXME this isn't threadsafe right? we need to get rid of its use.
-import org.json4s._
+import org.json4s.JsonAST._
 import scala.util.parsing.json.JSONFormat.quoteString
 import scala.collection.mutable.{ StringBuilder, Stack }
 import scala.util.{ Success, Failure }
@@ -25,6 +25,11 @@ package json {
 
   private[serialization] object `package` {
     implicit val pickleFormat: JSONPickleFormat = new JSONPickleFormat
+    def findByName(obj: JObject, name: String): JValue =
+      (obj.obj find { case (n, v) => n == name }) match {
+        case Some((n, v)) => v
+        case _            => JNothing
+      }
   }
 
   private[serialization] sealed abstract class JSONPickle extends Pickle {
@@ -36,7 +41,7 @@ package json {
 
     private[serialization] def readTypeTag: Option[String] = parsedValue match {
       case obj: JObject =>
-        (obj \ JSONPickleFormat.TYPE_TAG_FIELD) match {
+        findByName(obj, JSONPickleFormat.TYPE_TAG_FIELD) match {
           case JString(s) => Some(s)
           case _          => None
         }
@@ -405,7 +410,7 @@ package json {
           state.current.asInstanceOf[JObject].values.keys.toList.sorted.map(k => JString(k))
         RawJsValue(JArray(keys), state)
         // TODO - what do we do if we're at a JNothing here...
-      } else RawJsValue(state.current.asInstanceOf[JObject] \ name, state)
+      } else RawJsValue(findByName(state.current.asInstanceOf[JObject], name), state)
       val nested = new VerifyingJSONPickleReader(format, nextState)
       if (this.areHintsPinned) {
         nested.pinHints()
@@ -468,7 +473,7 @@ package json {
       FastTypeTag.Null.key -> (datum => null),
       FastTypeTag.Ref.key -> (datum => lookupUnpicklee(datum match {
         case obj: JObject =>
-          (obj \ REF_ID_FIELD) match {
+          findByName(obj, REF_ID_FIELD) match {
             case JDouble(num) => num.toInt
             case x            => unexpectedValue(x, FastTypeTag.Ref)
           }
@@ -593,7 +598,7 @@ package json {
      * this will use the type hint provided if we're deserializing a known subclass (not an abstract/trait)
      */
     private def readTypeTagKey(obj: JObject, hints: Hints): String = {
-      (obj \ TYPE_TAG_FIELD) match {
+      findByName(obj, TYPE_TAG_FIELD) match {
         case JString(s) => s
         case found      => hints.tag.key
       }
@@ -604,7 +609,7 @@ package json {
         case JNull    => FastTypeTag.Null.key
         case JNothing => FastTypeTag.Nothing.key
         case obj: JObject =>
-          (obj \ REF_ID_FIELD) match {
+          findByName(obj, REF_ID_FIELD) match {
             case JDouble(num) => FastTypeTag.Ref.key
             // Not a reference type.
             case _ =>

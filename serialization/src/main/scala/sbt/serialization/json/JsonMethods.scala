@@ -1,29 +1,29 @@
 package sbt.serialization.json
 
-import org.json4s.{
-  JsonInput,
-  StringInput,
-  StreamInput,
-  ReaderInput,
-  FileInput,
-  JValue,
-  JField,
-  JNothing,
-  JBool,
-  JString,
-  JInt,
-  JDecimal,
-  JArray,
-  JObject,
-  JNull,
-  JDouble
-}
+import org.json4s.JsonAST._
 import java.io.File
 import scala.pickling.PicklingException
 import scala.util.Try
+import java.nio.charset.Charset
+import java.io.{ Reader => JReader, File, InputStream }
+
+private[serialization] sealed abstract class JsonInput extends Product with Serializable
+private[serialization] case class StringInput(string: String) extends JsonInput
+private[serialization] case class ReaderInput(reader: JReader) extends JsonInput
+private[serialization] case class StreamInput(stream: InputStream) extends JsonInput
+private[serialization] case class FileInput(file: File) extends JsonInput
+
+private[serialization] trait BaseJsonMethods[T] {
+  def parse(in: JsonInput, useBigDecimalForDouble: Boolean = false): JValue
+  def parseOpt(in: JsonInput, useBigDecimalForDouble: Boolean = false): Option[JValue]
+
+  def render(value: JValue) /*(implicit formats: Formats = DefaultFormats)*/ : T
+  def compact(d: T): String
+  def pretty(d: T): String
+}
 
 /** An implementation of JsonMethods for json4s that uses Jawn and our own toStrings. */
-private[serialization] object JsonMethods extends org.json4s.JsonMethods[JValue] {
+private[serialization] object JsonMethods extends BaseJsonMethods[JValue] {
   // Redner doesn't do anything, as we aren't translating to an intermediate format before rendering.
   override def render(value: JValue): JValue = value
   // TODO - Write this.
@@ -129,4 +129,43 @@ private[serialization] object JsonMethods extends org.json4s.JsonMethods[JValue]
 
   def jvalueHashCode(jvalue: JValue): Int =
     jvalueSorted(jvalue).hashCode
+}
+
+private[serialization] object ParserUtil {
+  private val AsciiEncoder = Charset.forName("US-ASCII").newEncoder();
+
+  private[this] sealed abstract class StringAppender[T] {
+    def append(s: String): T
+    def subj: T
+  }
+  private[this] class StringWriterAppender(val subj: java.io.Writer) extends StringAppender[java.io.Writer] {
+    def append(s: String): java.io.Writer = subj.append(s)
+  }
+  private[this] class StringBuilderAppender(val subj: StringBuilder) extends StringAppender[StringBuilder] {
+    def append(s: String): StringBuilder = subj.append(s)
+  }
+
+  def quote(s: String): String = quote(s, new StringBuilderAppender(new StringBuilder)).toString
+  private[serialization] def quote(s: String, writer: java.io.Writer): java.io.Writer = quote(s, new StringWriterAppender(writer))
+  private[this] def quote[T](s: String, appender: StringAppender[T]): T = { // hot path
+    var i = 0
+    val l = s.length
+    while (i < l) {
+      (s(i): @annotation.switch) match {
+        case '"'  => appender.append("\\\"")
+        case '\\' => appender.append("\\\\")
+        case '\b' => appender.append("\\b")
+        case '\f' => appender.append("\\f")
+        case '\n' => appender.append("\\n")
+        case '\r' => appender.append("\\r")
+        case '\t' => appender.append("\\t")
+        case c =>
+          if (!AsciiEncoder.canEncode(c))
+            appender.append("\\u%04x".format(c: Int))
+          else appender.append(c.toString)
+      }
+      i += 1
+    }
+    appender.subj
+  }
 }

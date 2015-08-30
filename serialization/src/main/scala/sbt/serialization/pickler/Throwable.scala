@@ -15,10 +15,9 @@ trait ThrowablePicklers extends PrimitivePicklers with OptionPicklers with Vecto
     private val stringOptUnpickler = implicitly[Unpickler[Option[String]]]
 
     override def pickle(a: StackTraceElement, builder: PBuilder): Unit = {
-      builder.beginEntry(a)
+      builder.beginEntry(a, tag)
       def pickleString(field: String, value: String): Unit = {
         builder.putField(field, { b =>
-          b.hintTag(stringOptTag)
           stringOptPickler.pickle(Option(value), b)
         })
       }
@@ -26,7 +25,6 @@ trait ThrowablePicklers extends PrimitivePicklers with OptionPicklers with Vecto
       pickleString("methodName", a.getMethodName)
       pickleString("fileName", a.getFileName)
       builder.putField("lineNumber", { b =>
-        b.hintTag(intTag)
         intPickler.pickle(a.getLineNumber, b)
       })
       builder.endEntry()
@@ -57,17 +55,14 @@ trait ThrowablePicklers extends PrimitivePicklers with OptionPicklers with Vecto
     private val vsteUnpickler = vstePickler
 
     def pickle(a: Throwable, builder: PBuilder): Unit = {
-      builder.beginEntry(a)
+      builder.beginEntry(a, tag)
       builder.putField("message", { b =>
-        b.hintTag(stringOptTag)
         stringOptPickler.pickle(Option(a.getMessage), b)
       })
       builder.putField("cause", { b =>
-        b.hintTag(throwableOptTag)
         throwableOptPicklerUnpickler.pickle(Option(a.getCause), b)
       })
       builder.putField("stackTrace", { b =>
-        b.hintTag(vsteTag)
         vstePickler.pickle(a.getStackTrace.toVector, b)
       })
       builder.endEntry()
@@ -75,7 +70,7 @@ trait ThrowablePicklers extends PrimitivePicklers with OptionPicklers with Vecto
     def unpickle(tag: String, preader: PReader): Any = {
       val message = stringOptUnpickler.unpickleEntry(preader.readField("message")).asInstanceOf[Option[String]]
       val cause = throwableOptPicklerUnpickler.unpickleEntry(preader.readField("cause")).asInstanceOf[Option[Throwable]]
-      preader.hintStaticallyElidedType()
+      preader.hintElidedType(vsteUnpickler.tag)
       val stackTrace = vsteUnpickler.unpickleEntry(preader.readField("stackTrace")).asInstanceOf[Vector[StackTraceElement]]
       val result = new Exception(message.orNull, cause.orNull)
       result.setStackTrace(stackTrace.toArray)

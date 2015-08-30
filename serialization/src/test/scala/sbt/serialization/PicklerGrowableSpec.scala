@@ -7,8 +7,8 @@ import JUnitUtil._
 
 case class Foo(x: Int, y: Option[Int])
 object Foo {
-  implicit val pickler = genPickler[Foo]
-  implicit val unpickler = genUnpickler[Foo]
+  implicit val pickler = Pickler.generate[Foo]
+  implicit val unpickler = Unpickler.generate[Foo]
 }
 
 class PicklerGrowableTest {

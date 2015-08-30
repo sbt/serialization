@@ -7,19 +7,14 @@ import java.net.URI
 import scala.pickling.{ PickleOps, UnpickleOps }
 import sbt.serialization._, sbt.serialization.json._
 import JUnitUtil._
-import sbt.serialization.pickler.{
-  PrimitivePicklers,
-  PrimitiveArrayPicklers,
-  JavaExtraPicklers,
-  OptionPicklers,
-  ThrowablePicklers
-}
+import sbt.serialization.pickler._
 
 import scala.pickling.Defaults.pickleOps
 import scala.pickling.static._
 
 class BasicPicklerTest {
-  val basicProtocol = new PrimitivePicklers with PrimitiveArrayPicklers with JavaExtraPicklers with OptionPicklers with ThrowablePicklers {
+  // TODO - If we used serialized value, we can drop the ElidingPrimitivePicklers here.
+  val basicProtocol = new ElidingPrimitivePicklers with PrimitiveArrayPicklers with JavaExtraPicklers with OptionPicklers with ThrowablePicklers {
     implicit val staticOnly = scala.pickling.static.StaticOnly
   }
   import basicProtocol._

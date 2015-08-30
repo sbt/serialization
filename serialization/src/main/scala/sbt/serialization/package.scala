@@ -23,6 +23,7 @@ package object serialization extends SerializationFunctions with CustomPicklers 
 
   // All generated picklers are required to be static-only in this library.
   implicit val StaticOnly = scala.pickling.static.StaticOnly
+  implicit val ignoreCaseClassSubclasses = scala.pickling.generator.opts.ignoreCaseClassSubclasses
 
   implicit val ShareNothing = scala.pickling.shareNothing.ShareNothing
   type directSubclasses = _root_.scala.pickling.directSubclasses

@@ -32,8 +32,8 @@ private[serialization] class DebugPickleBuilder(indent: Int = 0) extends PBuilde
   private def println(s: String): Unit = System.err.println(s"$indentString$s")
   private def nextLevelBuilder = new DebugPickleBuilder(indent + 1)
 
-  override def beginEntry(picklee: Any): PBuilder = {
-    println(s"beginEntry($picklee)")
+  override def beginEntry(picklee: Any, tag: FastTypeTag[_]): PBuilder = {
+    println(s"beginEntry($picklee, $tag)")
     this
   }
 
@@ -81,8 +81,8 @@ private[serialization] class DebugPickleBuilder(indent: Int = 0) extends PBuilde
     println(s"pushHints()")
     this
   }
-  override def hintStaticallyElidedType(): this.type = {
-    println(s"hintStaticallyElidedType()")
+  override def hintElidedType(tag: FastTypeTag[_]): this.type = {
+    println(s"hintElidedType($tag)")
     this
   }
 
@@ -93,16 +93,6 @@ private[serialization] class DebugPickleBuilder(indent: Int = 0) extends PBuilde
 
   override def pinHints(): this.type = {
     println(s"pinHints()")
-    this
-  }
-
-  override def hintTag(tag: FastTypeTag[_]): this.type = {
-    println(s"hintTag($tag)")
-    this
-  }
-
-  override def hintDynamicallyElidedType(): this.type = {
-    System.err.println(s"hintDynamicallyElidedType()")
     this
   }
 

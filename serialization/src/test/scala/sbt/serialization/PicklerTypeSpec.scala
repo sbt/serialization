@@ -10,18 +10,18 @@ object Fruits {
   sealed trait Fruit
   case class Apple(x: Int) extends Fruit
   object Apple {
-    implicit val pickler = genPickler[Apple]
-    implicit val unpickler = genUnpickler[Apple]
+    implicit val pickler = Pickler.generate[Apple]
+    implicit val unpickler = Unpickler.generate[Apple]
   }
   case class Orange(x: Int) extends Fruit
   object Orange {
-    implicit val pickler = genPickler[Orange]
-    implicit val unpickler = genUnpickler[Orange]
+    implicit val pickler = Pickler.generate[Orange]
+    implicit val unpickler = Unpickler.generate[Orange]
   }
 
   object Fruit {
-    implicit val pickler = genPickler[Fruit]
-    implicit val unpickler = genUnpickler[Fruit]
+    implicit val pickler = Pickler.generate[Fruit]
+    implicit val unpickler = Unpickler.generate[Fruit]
   }
 }
 

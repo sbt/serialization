@@ -107,8 +107,8 @@ package json {
     def previous: BuilderState
   }
   private[json] case class CollectionState(val previous: BuilderState, numElements: Int, hasInput: Boolean) extends BuilderState
-  private[json] case class RawEntryState(previous: BuilderState, picklee: Any, hints: Hints, var wasCollectionOrMap: Boolean = false) extends BuilderState
-  private[json] case class MapEntryState(val previous: BuilderState, picklee: Any, hints: Hints) extends BuilderState
+  private[json] case class RawEntryState(previous: BuilderState, picklee: Any, hints: Hints, tag: FastTypeTag[_], var wasCollectionOrMap: Boolean = false) extends BuilderState
+  private[json] case class MapEntryState(val previous: BuilderState, picklee: Any, hints: Hints, tag: FastTypeTag[_]) extends BuilderState
   private[json] case class RefEntryState(val previous: BuilderState) extends BuilderState
   private[json] case class WriteOptionState(val previous: BuilderState) extends BuilderState
   private[json] object EmptyState extends BuilderState {
@@ -130,17 +130,17 @@ package json {
       (tag.key startsWith "scala.Option")
 
     // Here we get notified of object/value-like things.
-    override def beginEntry(picklee: Any): PBuilder = withHints { hints =>
+    override def beginEntry(picklee: Any, tag: FastTypeTag[_]): PBuilder = withHints { hints =>
       // Here we check to see if we need to serialize a reference.  These are used to avoid circular object
       // dependencies for picklers which have circluarly-references objects.
       if (hints.oid != -1) {
         buf.put("{\"" + REF_ID_FIELD + "\":" + hints.oid + "}")
         state = RefEntryState(state)
-      } else if (isOption(hints.tag)) {
+      } else if (isOption(tag)) {
         // We expect to be writing a collection, we just ignore the collection aspect.
-        state = WriteOptionState(RawEntryState(state, picklee, hints, true))
+        state = WriteOptionState(RawEntryState(state, picklee, hints, tag, true))
       } else {
-        state = new RawEntryState(state, picklee, hints)
+        state = new RawEntryState(state, picklee, hints, tag)
       }
       this
     }
@@ -150,7 +150,7 @@ package json {
           case x: RawEntryState =>
             x.wasCollectionOrMap = true
             // Now we know we're in a map state, so we swap into map state.
-            state = MapEntryState(x.previous, x.picklee, x.hints)
+            state = MapEntryState(x.previous, x.picklee, x.hints, x.tag)
             buf.put("{")
           case _: MapEntryState =>
             // here we just need another ,
@@ -164,16 +164,16 @@ package json {
       } else this
     override def endEntry(): Unit = {
       state match {
-        case RawEntryState(prev, _, _, true) =>
+        case RawEntryState(prev, _, _, _, true) =>
           // Here we do nothing because it was a collection.
           state = prev
-        case RawEntryState(prev, picklee, hints, false) =>
+        case RawEntryState(prev, picklee, hints, tag, false) =>
           // Here we have to actually serialize the thing, as we're not a collection or a map.
-          if (primitives.contains(hints.tag.key))
-            primitives(hints.tag.key)(picklee)
-          else if (primitiveArrays.contains(hints.tag.key)) {
-            primitiveArrays(hints.tag.key)(picklee)
-          } else if (isJValue(hints.tag)) {
+          if (primitives.contains(tag.key))
+            primitives(tag.key)(picklee)
+          else if (primitiveArrays.contains(tag.key)) {
+            primitiveArrays(tag.key)(picklee)
+          } else if (isJValue(tag)) {
             import JsonMethods._
             buf.put(compact(render(picklee.asInstanceOf[JValue])))
           } else {
@@ -181,15 +181,15 @@ package json {
             // as the type we're serializing may not have any contents.
             // we also serialize the "$type" here if needed.
             buf.put("{")
-            if (!hints.isStaticallyElidedType) appendTagString(picklee, hints)
+            if (!hints.isElidedType) appendTagString(picklee, tag)
             buf.put("}")
           }
           state = prev
-        case MapEntryState(prev, picklee, hints) =>
+        case MapEntryState(prev, picklee, hints, tag) =>
           // Add the type tag if we don't know it statically.
-          if (!hints.isStaticallyElidedType) {
+          if (!hints.isElidedType) {
             buf.put(",")
-            appendTagString(picklee, hints)
+            appendTagString(picklee, tag)
           }
           buf.put("}")
           state = prev
@@ -198,11 +198,11 @@ package json {
         case _ => sys.error("Unable to endEntry() when not in entry state!")
       }
     }
-    private def appendTagString(picklee: Any, hints: Hints): Unit =
-      buf.put("\"" + TYPE_TAG_FIELD + "\":\"" + makeTagString(picklee, hints) + "\"")
-    private def makeTagString(picklee: Any, hints: Hints): String =
-      if (hints.tag.key.contains("anonfun$")) picklee.getClass.getName
-      else hints.tag.key
+    private def appendTagString(picklee: Any, tag: FastTypeTag[_]): Unit =
+      buf.put("\"").put(TYPE_TAG_FIELD).put("\":\"").put(makeTagString(picklee, tag)).put("\"")
+    private def makeTagString(picklee: Any, tag: FastTypeTag[_]): String =
+      if (tag.key.contains("anonfun$")) picklee.getClass.getName
+      else tag.key
 
     // We cover ararys of primitives separately here.
     // NOTE: these are special cased in the core pickler design (probably for binary encoding efficiency)
@@ -218,12 +218,11 @@ package json {
     private def pickleArray(arr: Array[_], tag: FastTypeTag[_]) = {
       beginCollection(arr.length)
       pushHints()
-      hintStaticallyElidedType()
-      hintTag(tag)
+      hintElidedType(tag)
       pinHints()
       var i = 0
       while (i < arr.length) {
-        putElement(b => b.beginEntry(arr(i)).endEntry())
+        putElement(b => b.beginEntry(arr(i), tag).endEntry())
         i += 1
       }
       popHints()
@@ -312,13 +311,9 @@ package json {
     import JSONPickleFormat._
 
     // Debugging hints
-    override def hintTag(tag: FastTypeTag[_]): this.type = {
+    override def hintElidedType(tag: FastTypeTag[_]): this.type = {
       //System.err.println(s"hintTag($tag)")
-      super.hintTag(tag)
-    }
-    override def hintStaticallyElidedType(): this.type = {
-      //System.err.println(s"hintStaticallyElidedType()")
-      super.hintStaticallyElidedType()
+      super.hintElidedType(tag)
     }
     override def pinHints(): this.type = {
       //System.err.println(s"pinHints()")
@@ -384,7 +379,7 @@ package json {
         //   assume the statically hinted type is the right one
         case _: IniitalReaderState | _: RawJsValue =>
           withHints { hints =>
-            unpickleHelper(state.current, hints.tag.key)
+            unpickleHelper(state.current, hints.elidedType.getOrElse(sys.error("We cannot read a primitive/beginEntry without finding a tag....")).key)
           }
         // TODO - Do we need a state where we can read a value if we're in a collection reading state?
         case state =>
@@ -595,7 +590,7 @@ package json {
     private def readTypeTagKey(obj: JObject, hints: Hints): String = {
       (obj \ TYPE_TAG_FIELD) match {
         case JString(s) => s
-        case found      => hints.tag.key
+        case found      => throw new PicklingException(s"Type was elided, cannot find type for: $obj")
       }
     }
     /** Helper to read (or return elided) type tag for the given entry. */
@@ -608,13 +603,24 @@ package json {
             case JDouble(num) => FastTypeTag.Ref.key
             // Not a reference type.
             case _ =>
-              if (hints.isElidedType || hints.isStaticallyElidedType || hints.isDynamicallyElidedType) hints.tag.key
+              if (hints.isElidedType) hints.elidedType.get.key
               else readTypeTagKey(obj, hints)
           }
-        case _ if (hints.tag != null) => hints.tag.key
-        case _ =>
-          // TODO - This should be an error.  We need  a tag and we have NO IDEA what we are.
-          throw new PicklingException(s"Attempting to find tag in $current, but hints has ${hints.tag}")
+        case other =>
+          hints.elidedType match {
+            case Some(tag) => tag.key
+            case None =>
+              other match {
+                // TODO - These may be hacks...
+                case JString(_)  => FastTypeTag.String.key
+                case JDecimal(_) => FastTypeTag.Int.key
+                case JDouble(_)  => FastTypeTag.Double.key
+                case JBool(_)    => FastTypeTag.Boolean.key
+                case _ =>
+                  "" // TODO - this is a hacky workaround of evil...
+                //throw new PicklingException(s"Attempting to find tag in $current, but no elided hint provided and nothing found.")
+              }
+          }
       }
     }
   }

@@ -31,15 +31,13 @@ trait JavaExtraPicklers extends PrimitivePicklers {
     val tag = implicitly[FastTypeTag[A]]
     def pickle(a: A, builder: PBuilder): Unit = {
       builder.pushHints()
-      builder.hintTag(FastTypeTag.String)
-      builder.hintStaticallyElidedType()
+      builder.hintElidedType(FastTypeTag.String)
       stringPickler.pickle(canToString.toString(a), builder)
       builder.popHints()
     }
     def unpickle(tag: String, preader: PReader): Any = {
       preader.pushHints()
-      preader.hintTag(FastTypeTag.String)
-      preader.hintStaticallyElidedType()
+      preader.hintElidedType(FastTypeTag.String)
       preader.pinHints()
       val s = stringPickler.unpickle(FastTypeTag.String.key, preader).asInstanceOf[String]
       preader.unpinHints()

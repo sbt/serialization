@@ -7,10 +7,12 @@ object Dependencies {
   val scala210Version = "2.10.4"
   val scala211Version = "2.11.5"
 
-  val picklingVersion = "0.10.0"
+  val picklingVersion = "0.11.0-M1"
   val pickling210 = "org.scala-lang.modules" % "scala-pickling_2.10" % picklingVersion
   val pickling211 = "org.scala-lang.modules" % "scala-pickling_2.11" % picklingVersion
   val pickling = "org.scala-lang.modules" %% "scala-pickling" % picklingVersion
+
+  val insane = "org.netbeans" % "insane" % "RELEASE73"
 
   private val jsonTuples = Seq(
     ("org.json4s", "json4s-core", "3.2.10"),

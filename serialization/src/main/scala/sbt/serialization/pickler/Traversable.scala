@@ -2,7 +2,7 @@ package sbt.serialization
 package pickler
 
 import scala.collection.generic.CanBuildFrom
-import scala.pickling.{ FastTypeTag, PBuilder, PReader, PicklingException }
+import scala.pickling._
 
 trait VectorPicklers {
   implicit def vectorPickler[T: FastTypeTag](implicit elemPickler: Pickler[T], elemUnpickler: Unpickler[T], collTag: FastTypeTag[Vector[T]], cbf: CanBuildFrom[Vector[T], T, Vector[T]]): Pickler[Vector[T]] with Unpickler[Vector[T]] =
@@ -40,26 +40,24 @@ trait MapPicklers {
 object TravPickler {
   def apply[A: FastTypeTag, C <% Traversable[_]](implicit elemPickler: Pickler[A], elemUnpickler: Unpickler[A],
     cbf: CanBuildFrom[C, A, C], collTag: FastTypeTag[C]): Pickler[C] with Unpickler[C] =
-    new Pickler[C] with Unpickler[C] with RichTypes {
+    new AbstractPicklerUnpickler[C] {
       private implicit val elemTag = implicitly[FastTypeTag[A]]
       private val isPrimitive = elemTag.isEffectivelyPrimitive
       val tag = collTag
 
       def pickle(coll: C, builder: PBuilder): Unit = {
         if (elemTag == FastTypeTag.Int) builder.hintKnownSize(coll.size * 4 + 100)
-        builder.beginEntry(coll)
+        builder.beginEntry(coll, tag)
         builder.beginCollection(coll.size)
 
         builder.pushHints()
         if (isPrimitive) {
-          builder.hintStaticallyElidedType()
-          builder.hintTag(elemTag)
+          builder.hintElidedType(elemTag)
           builder.pinHints()
         }
 
         (coll: Traversable[_]).asInstanceOf[Traversable[A]].foreach { (elem: A) =>
           builder putElement { b =>
-            if (!isPrimitive) b.hintTag(elemTag)
             elemPickler.pickle(elem, b)
           }
         }
@@ -74,11 +72,9 @@ object TravPickler {
 
         preader.pushHints()
         if (isPrimitive) {
-          reader.hintStaticallyElidedType()
-          reader.hintTag(elemTag)
+          reader.hintElidedType(elemTag)
           reader.pinHints()
         } else {
-          reader.hintTag(elemTag) // custom code here
           reader.pinHints() // custom code here
         }
 

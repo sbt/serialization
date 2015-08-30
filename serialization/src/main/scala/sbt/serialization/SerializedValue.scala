@@ -4,6 +4,7 @@ import java.io.File
 import org.json4s.{ JString, JValue }
 import org.json4s.JsonAST._
 import scala.pickling.PicklingException
+import scala.pickling.AbstractPicklerUnpickler
 import scala.util.control.NonFatal
 import scala.util.{ Try, Success }
 import scala.pickling.functions._
@@ -76,21 +77,19 @@ object SerializedValue {
   // NOTE: this pickler ONLY works with our JSONPickleFormat because
   // it assumes JValue is a "primitive" known to the format.
   // we can adjust this if we add a binary format.
-  private[sbt] object pickler extends Pickler[SerializedValue] with Unpickler[SerializedValue] {
+  private[sbt] object pickler extends AbstractPicklerUnpickler[SerializedValue] {
     val cheaterTag = implicitly[FastTypeTag[JValue]]
     // TODO - This is super hacky mechanism to avoid issues w/ pinned types.
     override val tag = cheaterTag.asInstanceOf[FastTypeTag[SerializedValue]]
     def pickle(a: SerializedValue, builder: PBuilder): Unit = {
       val json = a.toJValue
-      builder.hintTag(cheaterTag)
-      builder.hintStaticallyElidedType()
-      builder.beginEntry(json)
+      builder.hintElidedType(cheaterTag)
+      builder.beginEntry(json, cheaterTag)
       builder.endEntry()
       //jsonPickler.pickle(spsv.toJson, builder)
     }
     def unpickle(tag: String, preader: PReader): Any = {
-      preader.hintTag(cheaterTag)
-      preader.hintStaticallyElidedType()
+      preader.hintElidedType(cheaterTag)
       preader.beginEntry()
       // TODO - Check beginEntry returns cheaterTag
       val value = preader.readPrimitive().asInstanceOf[JValue]
@@ -100,12 +99,21 @@ object SerializedValue {
   }
 }
 /** A value we have serialized as JSON */
+// TODO - We may want the pickle to be lazy...
 private final case class JsonValue(pickledValue: JSONPickle) extends SerializedValue {
   require(pickledValue ne null)
 
   import sbt.serialization.json.pickleFormat
   override def parse[T](implicit unpicklerForT: Unpickler[T]): Try[T] =
-    Try { unpickle[T](pickledValue) }
+    Try {
+      // We want to make sure we elide types as often as we can here.
+      // SO we use our own custom implementation of pickle, rather than the built in one.
+      try {
+        val reader = json.pickleFormat.createReader(pickledValue)
+        if (unpicklerForT.tag.isEffectivelyPrimitive) reader.hintElidedType(unpicklerForT.tag)
+        unpicklerForT.unpickleEntry(reader).asInstanceOf[T]
+      } finally scala.pickling.internal.clearUnpicklees()
+    }
 
   def hasTag[T](implicit unpickler: Unpickler[T]): Boolean =
     pickledValue.readTypeTag.map(tag => tag == unpickler.tag.key).getOrElse(false)

@@ -1,5 +1,5 @@
 import Dependencies._
-import com.typesafe.sbt.SbtGit._
+import com.typesafe.tools.mima.core._, ProblemFilters._
 
 lazy val commonSettings = Seq(
   git.baseVersion := "0.1.3",
@@ -7,13 +7,15 @@ lazy val commonSettings = Seq(
   crossScalaVersions := Seq(scala210Version, scala211Version),
   libraryDependencies ++= Seq(junitInterface % Test, scalaCheck % Test),
   bintrayOrganization := Some("sbt"),
+  bintrayPackage := "serialization",
   bintrayRepository := "maven-releases",
   scalacOptions <<= (scalaVersion) map { sv =>
     Seq("-unchecked", "-deprecation", "-Xmax-classfile-name", "72") ++
       { if (sv.startsWith("2.9")) Seq.empty else Seq("-feature") }
   },
   javacOptions in Compile := Seq("-target", "1.6", "-source", "1.6"),
-  javacOptions in (Compile, doc) := Seq("-source", "1.6")
+  javacOptions in (Compile, doc) := Seq("-source", "1.6"),
+  previousArtifact := None // Some(organization.value %% moduleName.value % "1.0.0")
 )
 
 lazy val root = (project in file(".")).
@@ -45,5 +47,7 @@ lazy val serialization = (project in file("serialization")).
     libraryDependencies ++= Seq(
       pickling,
       junitInterface % Test
-    ) ++ jsonDependencies
+    ) ++ jsonDependencies,
+    binaryIssueFilters ++= Seq(
+    )
   )

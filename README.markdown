@@ -1,3 +1,5 @@
+sbt/serialization is no longer maintained as sbt 1 uses [sjson-new](https://github.com/eed3si9n/sjson-new).
+
 sbt/serialization
 =================
 
